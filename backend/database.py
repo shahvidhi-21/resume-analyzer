@@ -1,6 +1,7 @@
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 from dotenv import load_dotenv
+from urllib.parse import quote_plus
 import os
 
 load_dotenv()  # reads .env file
@@ -11,7 +12,7 @@ host     = os.getenv("DB_HOST", "localhost")
 port     = os.getenv("DB_PORT", "3306")
 db_name  = os.getenv("DB_NAME", "resume_analyzer")
 
-DATABASE_URL = f"mysql+pymysql://{user}:{password}@{host}:{port}/{db_name}"
+DATABASE_URL = f"mysql+pymysql://{user}:{quote_plus(password)}@{host}:{port}/{db_name}"
 
 engine = create_engine(DATABASE_URL, echo=False)
 

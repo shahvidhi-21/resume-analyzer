@@ -6,7 +6,7 @@ import os
 
 from database import engine, get_db, Base
 from models import JobDescription, Candidate
-from resume_parser import extract_text_from_file, extract_text_from_plain
+from resume_parser import extract_text_from_file, extract_text_from_plain, extract_raw_text_for_name
 from scorer import score_candidate
 from text_processor import extract_jd_required_skills
 from llm import generate_interview_insights
@@ -88,8 +88,30 @@ async def analyze(
         if not resume_text.strip():
             continue
 
-        # derive candidate name from filename 
-        name = os.path.splitext(resume_file.filename)[0].replace("_", " ").title()
+        # derive candidate name: first-line heuristic on raw (newline-preserved) text
+        # Most resumes put the candidate's full name as the very first line.
+        # Fallback to filename-stem if the first line looks suspicious.
+        def _extract_name_from_text(raw_text: str, fallback_filename: str) -> str:
+            for line in raw_text.splitlines():
+                line = line.strip()
+                if not line:
+                    continue
+                # Accept if: short enough to be a name, mostly alpha/spaces/dots/hyphens
+                alpha_ratio = sum(c.isalpha() or c in " .-" for c in line) / len(line)
+                if len(line) <= 60 and alpha_ratio >= 0.85 and len(line.split()) <= 6:
+                    return line.title()
+                break  # only check the first non-empty line
+            # fallback
+            return os.path.splitext(fallback_filename)[0].replace("_", " ").title()
+
+        raw_text = extract_raw_text_for_name(resume_bytes, resume_file.filename)
+        # DEBUG: print first 5 lines of raw text to diagnose name extraction
+        print(f"\n--- RAW TEXT DEBUG for {resume_file.filename} ---")
+        for i, ln in enumerate(raw_text.splitlines()[:10]):
+            print(f"  line[{i}]: {repr(ln)}")
+        print("---")
+        name = _extract_name_from_text(raw_text, resume_file.filename)
+        print(f"  => extracted name: {repr(name)}")
 
         # run scoring pipeline
         score_result = score_candidate(

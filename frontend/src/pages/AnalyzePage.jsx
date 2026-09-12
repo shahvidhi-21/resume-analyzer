@@ -78,7 +78,7 @@ export default function AnalyzePage({ onResults }) {
           <div className="grid-2" style={{ gap: 16 }}>
             <div>
               <label className="form-label">Upload JD File <span style={{ fontWeight: 400, color: 'var(--text-muted)' }}>(PDF / DOCX / TXT)</span></label>
-              <div {...getJDRootProps()} className={`upload-zone` + (jdDrag ? ' drag-active' : '')}>
+              <div {...getJDRootProps()} className={`upload-zone` + (jdDrag ? ' drag-active' : '')} style={{ height: 160, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 0 }}>
                 <input {...getJDInputProps()} id="jd-file-input" />
                 <div className="upload-icon"><Upload size={22} /></div>
                 {jdFile ? (
@@ -100,7 +100,7 @@ export default function AnalyzePage({ onResults }) {
               <textarea
                 id="jd-text-input"
                 className="form-textarea"
-                style={{ minHeight: 140 }}
+                style={{ height: 160, resize: 'none' }}
                 placeholder="Paste the full job description here..."
                 value={jdText}
                 onChange={e => setJdText(e.target.value)}

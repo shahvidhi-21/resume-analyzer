@@ -8,10 +8,10 @@ __pycache__/
 backend/.env
 *.db
 
-# Ignore fixtures folder
+
 fixtures/
 
-# Frontend dependencies and build outputs
+
 frontend/node_modules/
 frontend/dist/
 frontend/.cache/

@@ -29,7 +29,29 @@ def _extract_from_pdf(file_content: bytes) -> str:
     return " ".join(text.split())
 
 
+def _extract_from_pdf_raw(file_content: bytes) -> str:
+    """Return PDF text with newlines preserved (used for name extraction)."""
+    text = ""
+    with fitz.open(stream=file_content, filetype="pdf") as doc:
+        for page in doc:
+            text += page.get_text() + "\n"
+    return text
+
+
 def _extract_from_docx(file_content: bytes) -> str:
     doc = docx.Document(io.BytesIO(file_content))
     paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
     return " ".join(paragraphs)
+
+
+def extract_raw_text_for_name(file_content: bytes, filename: str) -> str:
+    """Extract text preserving line breaks — only used for candidate name extraction."""
+    file_ext = filename.lower().split('.')[-1]
+    if file_ext == "pdf":
+        return _extract_from_pdf_raw(file_content)
+    elif file_ext in ["doc", "docx"]:
+        doc = docx.Document(io.BytesIO(file_content))
+        return "\n".join(p.text for p in doc.paragraphs)
+    elif file_ext == "txt":
+        return file_content.decode("utf-8", errors="ignore")
+    return ""

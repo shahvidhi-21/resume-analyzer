@@ -17,7 +17,7 @@ export default function DashboardPage({ onNavigate }) {
               <Zap size={18} /> Start New Analysis <ArrowRight size={16} />
             </button>
           </div>
-          <div style={{ fontSize: 72 }}>🎯</div>
+          <div className="animate-float" style={{ fontSize: 160, marginRight: 70, lineHeight: 1 }}>🎯</div>
         </div>
       </div>
 
@@ -30,10 +30,12 @@ export default function DashboardPage({ onNavigate }) {
             { icon: '📂', title: 'Upload Resumes', desc: 'Bulk upload multiple candidate resumes in any supported format.', color: 'var(--blue-light)', textColor: 'var(--blue)' },
             { icon: '📊', title: 'Get Rankings', desc: 'AI scores each candidate by skills, semantics, experience & education.', color: 'var(--success-light)', textColor: 'var(--success)' },
           ].map(({ icon, title, desc, color, textColor }) => (
-            <div key={title} className="card" style={{ border: `1px solid ${color}` }}>
-              <div style={{ width: 48, height: 48, background: color, borderRadius: 12, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 22, marginBottom: 14 }}>{icon}</div>
-              <div style={{ fontWeight: 700, marginBottom: 6, color: textColor }}>{title}</div>
-              <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.6 }}>{desc}</div>
+            <div key={title} className="card" style={{ border: `1px solid ${color}`, display: 'flex', gap: 16, alignItems: 'center' }}>
+              <div style={{ flexShrink: 0, width: 56, height: 56, background: color, borderRadius: 14, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>{icon}</div>
+              <div>
+                <div style={{ fontWeight: 700, marginBottom: 4, color: textColor }}>{title}</div>
+                <div style={{ fontSize: 13, color: 'var(--text-muted)', lineHeight: 1.5 }}>{desc}</div>
+              </div>
             </div>
           ))}
         </div>

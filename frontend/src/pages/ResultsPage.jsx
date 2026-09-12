@@ -62,14 +62,14 @@ export default function ResultsPage({ data, fromPage, onBack }) {
     <div className="page">
 
       {/* Top bar */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 16, marginBottom: 24 }}>
-        <button id="back-btn" className="btn btn-ghost btn-sm" onClick={onBack}>
-          <ArrowLeft size={15} /> Back
-        </button>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 24 }}>
         <div>
           <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Results — {jd_title}</h2>
           <p style={{ fontSize: 13, color: 'var(--text-muted)', margin: 0 }}>{candidates.length} candidate{candidates.length !== 1 ? 's' : ''} analyzed</p>
         </div>
+        <button id="back-btn" className="btn btn-sm" onClick={onBack} style={{ background: '#FFFFFF', color: 'var(--text-primary)', border: '1.5px solid var(--border)', boxShadow: '0 1px 3px rgba(0,0,0,0.05)', transition: 'all 0.2s' }} onMouseEnter={e => e.currentTarget.style.background = '#F8FAFC'} onMouseLeave={e => e.currentTarget.style.background = '#FFFFFF'}>
+          <ArrowLeft size={15} /> Back
+        </button>
       </div>
 
       {/* Stats */}

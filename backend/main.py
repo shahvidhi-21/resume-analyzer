@@ -11,6 +11,8 @@ from scorer import score_candidate
 from text_processor import extract_jd_required_skills
 from llm import generate_interview_insights
 
+from sqlalchemy.sql import func
+
 # creates all tables in MySQL on startup if they don't already exist
 Base.metadata.create_all(bind=engine)
 
@@ -18,7 +20,7 @@ app = FastAPI(title="Resume Analyzer API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["http://localhost:5173"],
+    allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
 )
@@ -27,6 +29,20 @@ app.add_middleware(
 @app.get("/api/health")
 def health_check():
     return {"status": "ok", "message": "Resume Analyzer API is running"}
+
+
+@app.get("/api/stats")
+def get_stats(db: Session = Depends(get_db)):
+    total_jds = db.query(JobDescription).count()
+    total_candidates = db.query(Candidate).count()
+    avg_score_res = db.query(func.avg(Candidate.overall_score)).scalar()
+    avg_score = round(float(avg_score_res), 1) if avg_score_res is not None else 0.0
+
+    return {
+        "active_jds": total_jds,
+        "resumes_analyzed": total_candidates,
+        "avg_match_score": avg_score,
+    }
 
 
 @app.post("/api/analyze")
@@ -120,6 +136,28 @@ async def analyze(
     }
 
 
+@app.get("/api/sessions")
+def get_sessions(db: Session = Depends(get_db)):
+    jds = db.query(JobDescription).order_by(JobDescription.created_at.desc()).all()
+    sessions = []
+    for jd in jds:
+        c_count = db.query(Candidate).filter(Candidate.jd_id == jd.id).count()
+        top_c = (
+            db.query(Candidate)
+            .filter(Candidate.jd_id == jd.id)
+            .order_by(Candidate.overall_score.desc())
+            .first()
+        )
+        sessions.append({
+            "id": jd.id,
+            "title": jd.title,
+            "created_at": jd.created_at.strftime("%Y-%m-%d %H:%M") if jd.created_at else "",
+            "candidate_count": c_count,
+            "top_score": top_c.overall_score if top_c else 0,
+        })
+    return sessions
+
+
 @app.get("/api/sessions/{jd_id}/candidates")
 def get_candidates(jd_id: int, db: Session = Depends(get_db)):
     # returns all candidates for a given JD session, sorted by score
@@ -140,7 +178,7 @@ def get_candidates(jd_id: int, db: Session = Depends(get_db)):
         "candidates": [
             {
                 "id": c.id,
-                "name": c.name,
+                "candidate_name": c.name,
                 "overall_score": c.overall_score,
                 "breakdown": c.score_breakdown,
                 "matched_skills": c.matched_skills,

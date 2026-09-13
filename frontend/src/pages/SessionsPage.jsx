@@ -21,7 +21,7 @@ const TITLE_COLORS = [
   '#7C3AED', // violet
   '#2563EB', // blue
   '#059669', // emerald
-  '#4338CA', // indigo
+  '#5a50cbff', // indigo
   '#DB2777', // pink
   '#0891B2', // cyan
   '#6D28D9', // deep violet
@@ -98,24 +98,47 @@ function SessionCard({ s, onOpen }) {
 
 export default function SessionsPage({ onLoadSession }) {
   const [sessions, setSessions] = useState([]);
+  const [offset, setOffset]     = useState(0);
+  const [hasMore, setHasMore]   = useState(true);
   const [loading, setLoading]   = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [error, setError]       = useState('');
   const [search, setSearch]     = useState('');
   const [filterTier, setFilter] = useState('all');
   const [sortBy, setSortBy]     = useState('date_desc');
 
-  useEffect(() => { fetchSessions(); }, []);
+  useEffect(() => { fetchSessions(0); }, []);
 
-  const fetchSessions = async () => {
-    setLoading(true); setError('');
+  const fetchSessions = async (currentOffset = 0) => {
+    if (currentOffset === 0) setLoading(true);
+    else setLoadingMore(true);
+    
+    setError('');
     try {
-      const { data } = await axios.get(`${API}/api/sessions`);
-      setSessions(data);
+      const { data } = await axios.get(`${API}/api/sessions?limit=15&offset=${currentOffset}`);
+      if (currentOffset === 0) {
+        setSessions(data);
+      } else {
+        setSessions(prev => {
+          const existingIds = new Set(prev.map(s => s.id));
+          const newSessions = data.filter(s => !existingIds.has(s.id));
+          return [...prev, ...newSessions];
+        });
+      }
+      setHasMore(data.length === 15);
+      setOffset(currentOffset);
     } catch (e) {
       const msg = e.response?.data?.detail || e.message;
       setError(`Could not load past sessions (${msg}). Is the backend running?`);
     } finally {
       setLoading(false);
+      setLoadingMore(false);
+    }
+  };
+
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      fetchSessions(offset + 15);
     }
   };
 
@@ -146,12 +169,35 @@ export default function SessionsPage({ onLoadSession }) {
         return true;
       })
       .sort((a, b) => {
-        if (sortBy === 'date_desc')  return new Date(b.created_at) - new Date(a.created_at);
+        if (sortBy === 'date_desc')  return new Date(b.created_at?.replace(" ", "T") || 0) - new Date(a.created_at?.replace(" ", "T") || 0);
         if (sortBy === 'score_desc') return (b.top_score || 0) - (a.top_score || 0);
         if (sortBy === 'candidates') return (b.candidate_count || 0) - (a.candidate_count || 0);
         return 0;
       });
   }, [sessions, filterTier, search, sortBy]);
+
+  const groupedSessions = useMemo(() => {
+    if (sortBy !== 'date_desc') return { "All": displayed };
+    
+    const today = new Date();
+    today.setHours(0,0,0,0);
+    
+    const startOfWeek = new Date(today);
+    startOfWeek.setDate(today.getDate() - today.getDay());
+    
+    const groups = { "Today": [], "This week": [], "Older": [] };
+    
+    displayed.forEach(s => {
+      const dateStr = s.created_at ? s.created_at.replace(" ", "T") : "";
+      const d = new Date(dateStr);
+      if (!s.created_at || isNaN(d)) groups["Older"].push(s);
+      else if (d >= today) groups["Today"].push(s);
+      else if (d >= startOfWeek) groups["This week"].push(s);
+      else groups["Older"].push(s);
+    });
+    
+    return groups;
+  }, [displayed, sortBy]);
 
   if (loading) {
     return (
@@ -224,10 +270,28 @@ export default function SessionsPage({ onLoadSession }) {
           <div className="empty-sub">Try adjusting the search or score tier filter.</div>
         </div>
       ) : (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
-          {displayed.map(s => (
-            <SessionCard key={s.id} s={s} onOpen={handleOpenSession} />
-          ))}
+        <div>
+          {Object.entries(groupedSessions).map(([groupName, groupSessions]) => {
+            if (groupSessions.length === 0) return null;
+            return (
+              <div key={groupName} style={{ marginBottom: 32 }}>
+                {groupName !== 'All' && <h4 style={{ marginBottom: 16, fontSize: 13, fontWeight: 600, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>{groupName}</h4>}
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 }}>
+                  {groupSessions.map(s => (
+                    <SessionCard key={s.id} s={s} onOpen={handleOpenSession} />
+                  ))}
+                </div>
+              </div>
+            );
+          })}
+          
+          {hasMore && (
+            <div style={{ textAlign: 'center', marginTop: 16, marginBottom: 40 }}>
+              <button className="btn btn-ghost" onClick={loadMore} disabled={loadingMore}>
+                {loadingMore ? 'Loading...' : 'Load more sessions'}
+              </button>
+            </div>
+          )}
         </div>
       )}
 

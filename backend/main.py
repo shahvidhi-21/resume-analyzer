@@ -159,8 +159,8 @@ async def analyze(
 
 
 @app.get("/api/sessions")
-def get_sessions(db: Session = Depends(get_db)):
-    jds = db.query(JobDescription).order_by(JobDescription.created_at.desc()).all()
+def get_sessions(limit: int = 15, offset: int = 0, db: Session = Depends(get_db)):
+    jds = db.query(JobDescription).order_by(JobDescription.created_at.desc()).offset(offset).limit(limit).all()
     sessions = []
     for jd in jds:
         c_count = db.query(Candidate).filter(Candidate.jd_id == jd.id).count()

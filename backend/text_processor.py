@@ -10,7 +10,52 @@ _model = SentenceTransformer("all-MiniLM-L6-v2")
 # skills.json is just a helper list for common terms
 _skills_path = os.path.join(os.path.dirname(__file__), "skills.json")
 with open(_skills_path, "r") as f:
-    SKILLS_HELPER_LIST = json.load(f)["skills"]
+    _data = json.load(f)
+    SKILLS_HELPER_LIST = set(_data.get("skills", []))
+    EXTRA_ALLOWED_TERMS = set(_data.get("extra_allowed_terms", []))
+    NOISE_TERMS = set(_data.get("noise_terms", []))
+
+NOISE_PATTERNS = [
+    r'^[a-z]+-(based|year|time|site)$',   # ahmedabad-based, final-year, full-time, on-site
+    r'^[a-z]-\d{2,}$',                     # b-606, address/unit codes
+]
+
+SKILL_ALIASES = {
+    "ml": "machine learning",
+    "ai": "artificial intelligence",
+    "bi": "business intelligence",
+    "nlp": "natural language processing",
+    "cv": "computer vision",
+    "aws": "amazon web services",
+    "gcp": "google cloud",
+    "llm": "large language models",
+    "rag": "retrieval augmented generation",
+    "react.js": "react",
+    "node.js": "node",
+    "vue.js": "vue",
+    "js": "javascript",
+    "ts": "typescript"
+}
+
+
+def is_valid_skill(term: str) -> bool:
+    # filters out noise picked up during JD parsing (HR jargon, locations, sentence fragments)
+    term = term.lower().strip()
+    if not term or term in NOISE_TERMS:
+        return False
+    for pat in NOISE_PATTERNS:
+        if re.match(pat, term):
+            return False
+    # a short, single-word term must be a recognized skill, not just any capitalized/acronym match
+    if " " not in term and "-" not in term and "/" not in term:
+        if len(term) <= 4 and term not in SKILLS_HELPER_LIST and term not in EXTRA_ALLOWED_TERMS:
+            return False
+    # a multi-word fragment must contain at least one recognizable skill word
+    if " " in term and term not in SKILLS_HELPER_LIST:
+        words = term.split()
+        if not any(w in SKILLS_HELPER_LIST or w in EXTRA_ALLOWED_TERMS for w in words):
+            return False
+    return True
 
 
 def extract_jd_required_skills(jd_text: str) -> list[str]:
@@ -61,7 +106,13 @@ def extract_jd_required_skills(jd_text: str) -> list[str]:
             if 2 <= len(item) <= 40:
                 skills.add(item)
 
-    return list(skills)
+    # final cross-check: drop anything that doesn't look like a real skill
+    valid_skills = set()
+    for s in skills:
+        if is_valid_skill(s):
+            canonical = SKILL_ALIASES.get(s, s)
+            valid_skills.add(canonical)
+    return sorted(list(valid_skills))
 
 
 def match_resume_skills(
@@ -76,16 +127,22 @@ def match_resume_skills(
         skill_lower = skill.lower().strip()
         if not skill_lower:
             continue
+        # Check the canonical skill AND any aliases that map to it
+        variations = [skill_lower]
+        for alias, canonical in SKILL_ALIASES.items():
+            if canonical == skill_lower:
+                variations.append(alias)
+                
         found = False
-
-        pattern = r'\b' + re.escape(skill_lower) + r'\b'
-        if re.search(pattern, resume_lower):
-            found = True
-
-        # loose match for near-variants, e.g. postgres vs postgresql
-        if not found and len(skill_lower) >= 4:
-            for word in resume_lower.split():
-                if len(word) >= 4 and (skill_lower in word or word in skill_lower):
+        for var in variations:
+            pattern = r'\b' + re.escape(var) + r'\b'
+            if re.search(pattern, resume_lower):
+                found = True
+                break
+                
+            # safer loose match for single-word skills
+            if not found and len(var) >= 5 and " " not in var:
+                if var in resume_lower:
                     found = True
                     break
 

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-import { LayoutDashboard, FileSearch, Upload, BrainCircuit, BarChart2 } from 'lucide-react';
+import { LayoutDashboard, FileSearch, Upload, BrainCircuit, BarChart2, FileText, Sparkles } from 'lucide-react';
 
 const API = 'http://localhost:8000';
 
@@ -29,10 +29,16 @@ export default function Sidebar({ currentPage, onNavigate }) {
 
   return (
     <aside className="sidebar">
-      <div className="sidebar-logo">
-        <div className="logo-icon">🎯</div>
-        <div>
-          <span className="logo-text">ResumeAI</span>
+      <div
+        className="sidebar-logo"
+        onClick={() => onNavigate('dashboard')}
+        style={{ cursor: 'pointer' }}
+      >
+        <div style={{ flexShrink: 0, width: 64, height: 64, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <img src="/logo.png" alt="CVera Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column' }}>
+          <span className="logo-text">CVera</span>
           <span className="logo-sub">Resume Analyzer</span>
         </div>
       </div>

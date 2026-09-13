@@ -4,6 +4,7 @@ import DashboardPage from './pages/DashboardPage';
 import AnalyzePage from './pages/AnalyzePage';
 import ResultsPage from './pages/ResultsPage';
 import SessionsPage from './pages/SessionsPage';
+import InsightsPage from './pages/InsightsPage';
 
 const PAGE_TITLES = {
   dashboard: { title: 'Dashboard',     sub: 'Welcome to Resume Analyzer' },
@@ -48,15 +49,7 @@ export default function App() {
         {page === 'results'   && results && <ResultsPage data={results} fromPage={fromPage} onBack={() => setPage(fromPage)} />}
         {page === 'sessions'  && <SessionsPage  onLoadSession={(data) => handleResults(data, 'sessions')} />}
 
-        {page === 'insights' && (
-          <div className="page">
-            <div className="empty-state">
-              <div className="empty-icon">🤖</div>
-              <div className="empty-title">AI Insights</div>
-              <div className="empty-sub">Run an analysis first to see AI-generated interview insights here.</div>
-            </div>
-          </div>
-        )}
+        {page === 'insights' && <InsightsPage />}
       </div>
     </div>
   );

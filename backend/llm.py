@@ -1,11 +1,68 @@
+import os
 import json
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
+
+load_dotenv(override=True)
 
 
 def call_llm(prompt: str) -> str | None:
-    # placeholder - wire up an actual API key here later
-    # return None for now so the app works without an LLM
-    # example: swap this out with a Gemini/OpenAI call
-    return None
+    api_key = os.getenv("GEMINI_API_KEY")
+
+    if not api_key or api_key == "YOUR_GEMINI_API_KEY_HERE":
+        print("Warning: GEMINI_API_KEY is not set.")
+        return None
+
+    try:
+        client = genai.Client(api_key=api_key)
+
+        response = client.models.generate_content(
+            model="gemini-3.6-flash",
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                response_mime_type="application/json",
+                response_schema={
+                    "type": "object",
+                    "properties": {
+                        "claim_questions": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "claim": {"type": "string"},
+                                    "question": {"type": "string"}
+                                },
+                                "required": ["claim", "question"]
+                            }
+                        },
+                        "interview_questions": {
+                            "type": "object",
+                            "properties": {
+                                "technical": {"type": "string"},
+                                "project": {"type": "string"},
+                                "skill_gap": {"type": "string"}
+                            },
+                            "required": [
+                                "technical",
+                                "project",
+                                "skill_gap"
+                            ]
+                        }
+                    },
+                    "required": [
+                        "claim_questions",
+                        "interview_questions"
+                    ]
+                }
+            )
+        )
+
+        return response.text
+
+    except Exception as e:
+        print(f"Gemini API Error: {e}")
+        return None
 
 
 def generate_interview_insights(
@@ -13,44 +70,60 @@ def generate_interview_insights(
     jd_text: str,
     missing_skills: list[str]
 ) -> dict | None:
-    # builds a prompt asking the LLM to:
-    # 1. find quantifiable claims in the resume and generate verification questions
-    # 2. generate 3 interview questions (technical, project-based, skill-gap)
+
+    missing = ", ".join(missing_skills[:5]) if missing_skills else "None"
+
     prompt = f"""
-You are a technical recruiter assistant. Given the resume and job description below, do two things:
+You are a technical recruiter assistant analyzing a candidate
+for a job position.
 
-1. Find up to 2 quantifiable claims in the resume (e.g. "improved accuracy by 95%")
-   and write one verification question for each.
+Perform the following tasks:
 
-2. Write 3 interview questions:
-   - One TECHNICAL question based on the candidate's matched skills.
-   - One PROJECT question based on their past work.
-   - One SKILL-GAP question targeting these missing skills: {', '.join(missing_skills[:5])}.
+1. Find up to 2 QUANTIFIABLE CLAIMS from the resume.
+   Examples:
+   - "Improved accuracy by 95%"
+   - "Reduced processing time by 40%"
+   - "Handled 10,000+ records"
 
-Resume:
-{resume_text[:3000]}
+   For each claim, generate ONE verification interview question.
 
-Job Description:
-{jd_text[:2000]}
+2. Generate exactly 3 interview questions:
+   - TECHNICAL:
+     Based on the candidate's strongest skills that match the JD.
+   - PROJECT:
+     Based on a project mentioned in the resume.
+   - SKILL-GAP:
+     Target one or more of the missing skills listed below.
 
-Respond ONLY as valid JSON in this exact format:
-{{
-  "claim_questions": [
-    {{"claim": "...", "question": "..."}}
-  ],
-  "interview_questions": {{
-    "technical": "...",
-    "project": "...",
-    "skill_gap": "..."
-  }}
-}}
+Missing skills:
+{missing}
+
+Rules:
+- Questions must be specific to this candidate.
+- Do not invent projects, skills, technologies, or achievements.
+- Do not ask generic questions such as "Tell me about yourself."
+- Keep questions suitable for a technical interview.
+- If there are no quantifiable claims, return an empty claim_questions array.
+
+RESUME:
+{resume_text[:5000]}
+
+JOB DESCRIPTION:
+{jd_text[:3000]}
 """
+
     try:
         response = call_llm(prompt)
+
         if response is None:
             return None
+
         return json.loads(response)
-    except Exception:
-        # if LLM fails or returns bad JSON, silently return None
-        # the rest of the app must never crash because of this
+
+    except json.JSONDecodeError as e:
+        print(f"Invalid JSON returned by Gemini: {e}")
+        return None
+
+    except Exception as e:
+        print(f"Interview insight generation failed: {e}")
         return None

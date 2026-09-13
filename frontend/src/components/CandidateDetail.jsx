@@ -133,41 +133,55 @@ export default function CandidateDetail({ candidate, onClose }) {
               <div className="detail-section">
                 <p className="detail-section-title">🤖 AI Interview Insights</p>
 
-                {llm_insights.strengths?.length > 0 && (
-                  <div style={{ marginBottom: 12 }}>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--success)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <TrendingUp size={13} /> Strengths
-                    </div>
-                    {llm_insights.strengths.map((s, i) => (
-                      <div key={i} className="insight-item strength"><CheckCircle2 size={14} style={{ flexShrink: 0, marginTop: 1 }} />{s}</div>
-                    ))}
-                  </div>
-                )}
-
-                {llm_insights.weaknesses?.length > 0 && (
-                  <div style={{ marginBottom: 12 }}>
+                {/* Claim Verification Questions */}
+                {llm_insights.claim_questions?.length > 0 && (
+                  <div style={{ marginBottom: 14 }}>
                     <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--warning)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                      <TrendingDown size={13} /> Gaps / Weaknesses
+                      <TrendingUp size={13} /> Claim Verification Questions
                     </div>
-                    {llm_insights.weaknesses.map((w, i) => (
-                      <div key={i} className="insight-item weakness"><AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 1 }} />{w}</div>
+                    {llm_insights.claim_questions.map((cq, i) => (
+                      <div key={i} className="insight-item weakness" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 4 }}>
+                        <div style={{ fontSize: 11, opacity: 0.7, fontStyle: 'italic' }}>Claim: "{cq.claim}"</div>
+                        <div style={{ display: 'flex', gap: 6 }}><CheckCircle2 size={14} style={{ flexShrink: 0, marginTop: 2 }} />{cq.question}</div>
+                      </div>
                     ))}
                   </div>
                 )}
 
-                {llm_insights.interview_questions?.length > 0 && (
+                {/* Interview Questions */}
+                {llm_insights.interview_questions && (
                   <div>
-                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary)', marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <div style={{ fontSize: 12, fontWeight: 600, color: 'var(--primary)', marginBottom: 8, display: 'flex', alignItems: 'center', gap: 6 }}>
                       <HelpCircle size={13} /> Suggested Interview Questions
                     </div>
-                    {llm_insights.interview_questions.map((q, i) => (
-                      <div key={i} className="insight-item question"><BookOpen size={14} style={{ flexShrink: 0, marginTop: 1 }} />{q}</div>
-                    ))}
+
+                    {llm_insights.interview_questions.technical && (
+                      <div className="insight-item question" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 3, marginBottom: 8 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--primary)', opacity: 0.8 }}>Technical</div>
+                        <div style={{ display: 'flex', gap: 6 }}><BookOpen size={14} style={{ flexShrink: 0, marginTop: 2 }} />{llm_insights.interview_questions.technical}</div>
+                      </div>
+                    )}
+
+                    {llm_insights.interview_questions.project && (
+                      <div className="insight-item question" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 3, marginBottom: 8 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--primary)', opacity: 0.8 }}>Project</div>
+                        <div style={{ display: 'flex', gap: 6 }}><BookOpen size={14} style={{ flexShrink: 0, marginTop: 2 }} />{llm_insights.interview_questions.project}</div>
+                      </div>
+                    )}
+
+                    {llm_insights.interview_questions.skill_gap && (
+                      <div className="insight-item question" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 3 }}>
+                        <div style={{ fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px', color: 'var(--warning)', opacity: 0.9 }}>Skill Gap</div>
+                        <div style={{ display: 'flex', gap: 6 }}><AlertTriangle size={14} style={{ flexShrink: 0, marginTop: 2 }} />{llm_insights.interview_questions.skill_gap}</div>
+                      </div>
+                    )}
                   </div>
                 )}
+
               </div>
             </>
           )}
+
 
           {!llm_insights && (
             <div style={{ textAlign: 'center', padding: '20px', color: 'var(--text-muted)', fontSize: 13 }}>

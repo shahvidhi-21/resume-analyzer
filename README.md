@@ -1,12 +1,14 @@
-﻿# CVera — AI-Powered Resume Analyzer
+# CVera — AI-Powered Resume Analyzer
 
 > **GLS Nexus Hackathon 2026 Submission**
+> 
+> **Live Demo:** [https://resume-analyzer-mauve-five.vercel.app/](https://resume-analyzer-mauve-five.vercel.app/)
 
 CVera is an intelligent resume screening and candidate ranking platform that helps recruiters hire smarter using AI. Upload a Job Description and multiple resumes — CVera extracts skills, scores candidates, generates AI interview questions, and presents everything in a beautiful dashboard.
 
 ---
 
-## 🚀 Features
+## Features
 
 - **AI Skill Extraction** — Gemini API extracts only the technical skills from both JD and resumes (no soft skills, no education noise)
 - **Semantic Skill Matching** — Ecosystem-aware matching (e.g., Next.js counts for ReactJS, Django counts for Python)
@@ -20,7 +22,7 @@ CVera is an intelligent resume screening and candidate ranking platform that hel
 
 ---
 
-## 🛠️ Technologies Used
+## Technologies Used
 
 ### Frontend
 | Technology | Purpose |
@@ -37,16 +39,16 @@ CVera is an intelligent resume screening and candidate ranking platform that hel
 |------------|---------|
 | FastAPI | REST API framework |
 | SQLAlchemy | ORM |
-| MySQL (PyMySQL) | Database |
+| PostgreSQL / MySQL | Database (pg8000/pymysql) |
 | PyMuPDF (fitz) | PDF text extraction |
 | python-docx | DOCX text extraction |
-| sentence-transformers | Semantic similarity scoring |
+| scikit-learn | TF-IDF Semantic similarity scoring |
 | Google Gemini API | Skill extraction & interview questions |
 | Python-dotenv | Environment configuration |
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 resume-analyzer/
@@ -74,7 +76,7 @@ resume-analyzer/
 
 ---
 
-## ⚙️ Setup & Installation
+##  Setup & Installation
 
 ### Prerequisites
 - Python 3.10+
@@ -137,7 +139,7 @@ Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 🔑 API Endpoints
+## API Endpoints
 
 | Method | Endpoint | Description |
 |--------|----------|-------------|
@@ -153,7 +155,7 @@ Frontend runs at: `http://localhost:5173`
 
 ---
 
-## 🎯 How It Works
+##  How It Works
 
 1. **Upload JD** — Recruiter pastes or uploads a Job Description (PDF/DOCX/TXT)
 2. **Upload Resumes** — Upload one or more candidate resumes

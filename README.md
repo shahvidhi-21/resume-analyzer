@@ -163,15 +163,3 @@ Frontend runs at: `http://localhost:5173`
 6. **Interview Questions** — Gemini generates tailored questions per candidate
 7. **Results** — Candidates are ranked and displayed with full breakdowns
 
----
-
-## 👥 Team
-
-**Team Name:** [Your Team Name]  
-**Hackathon:** GLS Nexus Hackathon 2026
-
----
-
-## 📄 License
-
-This project was built for the GLS Nexus Hackathon 2026.

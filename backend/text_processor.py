@@ -2,11 +2,8 @@ import re
 import json
 import os
 import datetime
-from sentence_transformers import SentenceTransformer
+from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
-
-_model = SentenceTransformer("all-MiniLM-L6-v2")
-
 # skills.json is just a helper list for common terms
 _skills_path = os.path.join(os.path.dirname(__file__), "skills.json")
 with open(_skills_path, "r") as f:
@@ -155,9 +152,17 @@ def match_resume_skills(
 
 
 def compute_semantic_similarity(text1: str, text2: str) -> float:
-    # meaning-level match between resume and JD, not just keywords
-    embeddings = _model.encode([text1, text2])
-    score = cosine_similarity([embeddings[0]], [embeddings[1]])[0][0]
+    # meaning-level match between resume and JD, using TF-IDF instead of PyTorch 
+    # to stay safely within the 512MB free tier RAM limits of Render/etc.
+    if not text1.strip() or not text2.strip():
+        return 0.0
+        
+    try:
+        vectorizer = TfidfVectorizer(stop_words='english')
+        tfidf_matrix = vectorizer.fit_transform([text1, text2])
+        score = cosine_similarity(tfidf_matrix[0:1], tfidf_matrix[1:2])[0][0]
+    except Exception:
+        score = 0.0
     return float(score)
 
 

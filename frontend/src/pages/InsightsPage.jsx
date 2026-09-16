@@ -11,14 +11,24 @@ export default function InsightsPage() {
   const [loadingSessions, setLoadingSessions] = useState(true);
   const [loadingCandidates, setLoadingCandidates] = useState(false);
 
-  // Fetch all sessions on mount
+  // Fetch all sessions from all job titles on mount
   useEffect(() => {
     setLoadingSessions(true);
-    axios.get(`${API}/api/sessions?limit=20&offset=0`)
-      .then(({ data }) => {
-        setSessions(data);
-        if (data.length > 0) {
-          setSelectedJdId(data[0].id);
+    axios.get(`${API}/api/job-titles`)
+      .then(async ({ data: jobTitles }) => {
+        // For each job title, fetch its sessions and flatten them all
+        const allSessions = [];
+        for (const jt of jobTitles) {
+          try {
+            const { data } = await axios.get(`${API}/api/job-titles/${jt.id}/sessions`);
+            for (const s of (data.sessions || [])) {
+              allSessions.push({ ...s, job_title: jt.title });
+            }
+          } catch { /* skip failed titles */ }
+        }
+        setSessions(allSessions);
+        if (allSessions.length > 0) {
+          setSelectedJdId(allSessions[0].id);
         }
         setLoadingSessions(false);
       })
@@ -113,7 +123,7 @@ export default function InsightsPage() {
               >
                 {sessions.map(s => (
                   <option key={s.id} value={s.id} style={{ background: '#3b1f8c', color: '#fff' }}>
-                    {s.title} — {s.created_at?.split(' ')[0]}
+                    {s.job_title || s.title} — {s.created_at?.split(' ')[0]}
                   </option>
                 ))}
               </select>

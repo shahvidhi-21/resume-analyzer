@@ -12,14 +12,17 @@ def score_candidate(
     jd_text: str,
     candidate_name: str,
     jd_required_skills: list[str] = None,
+    matched_skills: list[str] = None,
+    missing_skills: list[str] = None,
 ) -> dict:
     # jd_required_skills is extracted once per JD and passed in
     # so we don't re-run extraction for every resume uploaded
     if jd_required_skills is None:
         jd_required_skills = extract_jd_required_skills(jd_text)
 
-    # skill match — 50% of total score
-    matched_skills, missing_skills = match_resume_skills(resume_text, jd_required_skills)
+    # Use LLM matched skills if provided, otherwise fallback to regex
+    if matched_skills is None or missing_skills is None:
+        matched_skills, missing_skills = match_resume_skills(resume_text, jd_required_skills)
     skill_ratio = len(matched_skills) / len(jd_required_skills) if jd_required_skills else 0.0
     skill_score = round(skill_ratio * 50, 1)
 

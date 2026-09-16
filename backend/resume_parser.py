@@ -40,8 +40,20 @@ def _extract_from_pdf_raw(file_content: bytes) -> str:
 
 def _extract_from_docx(file_content: bytes) -> str:
     doc = docx.Document(io.BytesIO(file_content))
-    paragraphs = [p.text for p in doc.paragraphs if p.text.strip()]
-    return " ".join(paragraphs)
+    parts = []
+    # body paragraphs
+    for p in doc.paragraphs:
+        t = p.text.strip()
+        if t:
+            parts.append(t)
+    # text inside tables (many DOCX JDs/resumes use table-based layouts)
+    for table in doc.tables:
+        for row in table.rows:
+            for cell in row.cells:
+                t = cell.text.strip()
+                if t:
+                    parts.append(t)
+    return " ".join(parts)
 
 
 def extract_raw_text_for_name(file_content: bytes, filename: str) -> str:
@@ -51,7 +63,13 @@ def extract_raw_text_for_name(file_content: bytes, filename: str) -> str:
         return _extract_from_pdf_raw(file_content)
     elif file_ext in ["doc", "docx"]:
         doc = docx.Document(io.BytesIO(file_content))
-        return "\n".join(p.text for p in doc.paragraphs)
+        parts = [p.text for p in doc.paragraphs]
+        # also grab table cells so name detection works for table-based layouts
+        for table in doc.tables:
+            for row in table.rows:
+                for cell in row.cells:
+                    parts.append(cell.text)
+        return "\n".join(parts)
     elif file_ext == "txt":
         return file_content.decode("utf-8", errors="ignore")
     return ""

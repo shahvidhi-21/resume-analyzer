@@ -15,9 +15,11 @@ const PAGE_TITLES = {
 };
 
 export default function App() {
-  const [page, setPage]           = useState('dashboard');
-  const [results, setResults]     = useState(null);
-  const [fromPage, setFromPage]   = useState('analyze');
+  const [page, setPage]               = useState('dashboard');
+  const [results, setResults]         = useState(null);
+  const [fromPage, setFromPage]       = useState('analyze');
+  const [prefilledTitle, setPrefill]  = useState('');
+  const [editSessionData, setEditData]= useState(null);
 
   const handleResults = (data, sourcePage = 'analyze') => {
     setResults(data);
@@ -25,9 +27,25 @@ export default function App() {
     setPage('results');
   };
 
+  const handleNewSession = (title) => {
+    setPrefill(title);
+    setEditData(null);
+    setPage('analyze');
+  };
+
+  const handleEditSession = (session) => {
+    setEditData(session);
+    setPrefill(session.title);
+    setPage('analyze');
+  };
+
   const handleNavigate = (p) => {
     setPage(p);
     if (p !== 'results') setResults(null);
+    if (p !== 'analyze') {
+      setPrefill('');
+      setEditData(null);
+    }
   };
 
   const { title, sub } = PAGE_TITLES[page] || PAGE_TITLES.dashboard;
@@ -45,9 +63,9 @@ export default function App() {
         </header>
 
         {page === 'dashboard' && <DashboardPage onNavigate={handleNavigate} />}
-        {page === 'analyze'   && <AnalyzePage   onResults={(data) => handleResults(data, 'analyze')} />}
+        {page === 'analyze'   && <AnalyzePage   onResults={(data) => handleResults(data, 'analyze')} prefilledTitle={prefilledTitle} editSessionData={editSessionData} onBack={editSessionData ? () => handleNavigate('sessions') : null} />}
         {page === 'results'   && results && <ResultsPage data={results} fromPage={fromPage} onBack={() => setPage(fromPage)} />}
-        {page === 'sessions'  && <SessionsPage  onLoadSession={(data) => handleResults(data, 'sessions')} />}
+        {page === 'sessions'  && <SessionsPage  onLoadSession={(data) => handleResults(data, 'sessions')} onNewSession={handleNewSession} onEditSession={handleEditSession} />}
 
         {page === 'insights' && <InsightsPage />}
       </div>

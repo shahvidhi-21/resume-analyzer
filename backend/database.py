@@ -18,10 +18,10 @@ if not DATABASE_URL:
     db_name  = os.getenv("DB_NAME", "resume_analyzer")
     DATABASE_URL = f"mysql+pymysql://{user}:{quote_plus(password)}@{host}:{port}/{db_name}"
 else:
-    # Render gives postgres:// URL — SQLAlchemy needs postgresql+psycopg2://
-    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
-    if not DATABASE_URL.startswith("postgresql+psycopg2"):
-        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
+    # Render gives postgres:// URL — SQLAlchemy needs postgresql+pg8000://
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+pg8000://", 1)
+    if not DATABASE_URL.startswith("postgresql+pg8000"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+pg8000://", 1)
 
 engine = create_engine(DATABASE_URL, echo=False)
 

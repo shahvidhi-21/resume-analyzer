@@ -1,0 +1,19 @@
+﻿services:
+  - type: web
+    name: cvera-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: DATABASE_URL
+        fromDatabase:
+          name: cvera-db
+          property: connectionString
+
+databases:
+  - name: cvera-db
+    databaseName: resume_analyzer
+    plan: free

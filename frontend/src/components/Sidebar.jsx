@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { LayoutDashboard, FileSearch, Upload, BrainCircuit, BarChart2, FileText, Sparkles } from 'lucide-react';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const navItems = [
   { icon: LayoutDashboard, label: 'Dashboard',       page: 'dashboard' },

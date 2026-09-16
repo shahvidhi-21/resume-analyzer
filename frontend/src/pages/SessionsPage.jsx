@@ -6,7 +6,7 @@ import {
   Edit2, Check, X, Plus
 } from 'lucide-react';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 const TITLE_COLORS = [
   '#7C3AED', '#2563EB', '#059669', '#5a50cb',

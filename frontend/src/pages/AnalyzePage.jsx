@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import axios from 'axios';
 import { Upload, FileText, X, Briefcase, Send, AlertCircle, ChevronDown, ArrowLeft } from 'lucide-react';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function AnalyzePage({ onResults, prefilledTitle = '', editSessionData = null, onBack = null }) {
   const [jdTitle, setJdTitle]           = useState(prefilledTitle);

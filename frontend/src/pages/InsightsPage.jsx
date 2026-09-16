@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { BookOpen, AlertTriangle, CheckCircle2, HelpCircle, BrainCircuit, RefreshCw, ChevronDown } from 'lucide-react';
 
-const API = 'http://localhost:8000';
+const API = import.meta.env.VITE_API_URL || 'http://localhost:8000';
 
 export default function InsightsPage() {
   const [sessions, setSessions] = useState([]);

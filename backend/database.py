@@ -6,13 +6,22 @@ import os
 
 load_dotenv()  # reads .env file
 
-user     = os.getenv("DB_USER", "root")
-password = os.getenv("DB_PASSWORD", "")
-host     = os.getenv("DB_HOST", "localhost")
-port     = os.getenv("DB_PORT", "3306")
-db_name  = os.getenv("DB_NAME", "resume_analyzer")
+# On Render, DATABASE_URL is injected automatically for PostgreSQL.
+# Locally, we build the MySQL URL from individual DB_* vars.
+DATABASE_URL = os.getenv("DATABASE_URL")
 
-DATABASE_URL = f"mysql+pymysql://{user}:{quote_plus(password)}@{host}:{port}/{db_name}"
+if not DATABASE_URL:
+    user     = os.getenv("DB_USER", "root")
+    password = os.getenv("DB_PASSWORD", "")
+    host     = os.getenv("DB_HOST", "localhost")
+    port     = os.getenv("DB_PORT", "3306")
+    db_name  = os.getenv("DB_NAME", "resume_analyzer")
+    DATABASE_URL = f"mysql+pymysql://{user}:{quote_plus(password)}@{host}:{port}/{db_name}"
+else:
+    # Render gives postgres:// URL — SQLAlchemy needs postgresql+psycopg2://
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+psycopg2://", 1)
+    if not DATABASE_URL.startswith("postgresql+psycopg2"):
+        DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+psycopg2://", 1)
 
 engine = create_engine(DATABASE_URL, echo=False)
 

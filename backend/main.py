@@ -72,11 +72,20 @@ def _run_startup_migration():
                 if existing:
                     title_cache[key] = existing[0]
                 else:
-                    result = conn.execute(text(
-                        "INSERT INTO job_titles (title) VALUES (:title)"
-                    ), {"title": raw_title})
-                    conn.commit()
-                    title_cache[key] = result.lastrowid
+                    # Use RETURNING id (PostgreSQL) with fallback to lastrowid (MySQL)
+                    try:
+                        result = conn.execute(text(
+                            "INSERT INTO job_titles (title) VALUES (:title) RETURNING id"
+                        ), {"title": raw_title})
+                        conn.commit()
+                        title_cache[key] = result.fetchone()[0]
+                    except Exception:
+                        conn.rollback()
+                        result = conn.execute(text(
+                            "INSERT INTO job_titles (title) VALUES (:title)"
+                        ), {"title": raw_title})
+                        conn.commit()
+                        title_cache[key] = result.lastrowid
 
             conn.execute(text(
                 "UPDATE job_descriptions SET job_title_id = :jt_id WHERE id = :jd_id"
